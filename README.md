@@ -4,7 +4,7 @@ A library of self-contained, runnable examples for building **custom front-ends*
 
 Where the [Connector Recipes](https://github.com/curiosity-ai/connector-recipes) cover ingesting data **into** a Curiosity workspace, these recipes cover putting a custom UI **on top of one**.
 
-All ten recipes live inside a single front-end project — [`Mosaik.FrontEnd.Recipes`](./Mosaik.FrontEnd.Recipes/) — so they build together and can be deployed as a single front-end bundle to your workspace.
+All ten recipes live inside a single front-end project — [`FrontEnd.Recipes`](./FrontEnd.Recipes/) — so they build together and can be deployed as a single front-end bundle to your workspace.
 
 ---
 
@@ -24,8 +24,8 @@ All ten recipes live inside a single front-end project — [`Mosaik.FrontEnd.Rec
 ## What's in here
 
 ```
-Mosaik.FrontEnd.Recipes/
-├── Mosaik.FrontEnd.Recipes.csproj
+FrontEnd.Recipes/
+├── FrontEnd.Recipes.csproj
 ├── h5.json
 ├── h5.Release.json
 └── src/
@@ -55,16 +55,16 @@ Each recipe folder is **self-contained**: a `README.md` explaining the idea and 
 
 | # | Recipe | What it covers |
 |---|---|---|
-| 01 | [Hello World](./Mosaik.FrontEnd.Recipes/src/Recipes/01_HelloWorld/) | The minimal Curiosity page — routing, `HubStack`, `HubTitle`, basic Tesserae components. |
-| 02 | [SearchArea](./Mosaik.FrontEnd.Recipes/src/Recipes/02_SearchArea/) | Wiring the workspace search box, facets, and custom search-result renderers. |
-| 03 | [Pivot](./Mosaik.FrontEnd.Recipes/src/Recipes/03_Pivot/) | Tabbed pages — cached vs lazy, justified, centered, overflow. |
-| 04 | [SegmentedPivot](./Mosaik.FrontEnd.Recipes/src/Recipes/04_SegmentedPivot/) | Compact segmented-control toggles for filters and views. |
-| 05 | [INodeRenderer](./Mosaik.FrontEnd.Recipes/src/Recipes/05_NodeRenderer/) | Custom node schema + custom cards / previews / detail pages, with admin-side schema bootstrap. |
-| 06 | [Neighbors & Graph](./Mosaik.FrontEnd.Recipes/src/Recipes/06_NeighborsGraph/) | Traversal via `Mosaik.API.Query`, the `Neighbors` list component, and the interactive `GraphExplorerView`. |
-| 07 | [Dashboards](./Mosaik.FrontEnd.Recipes/src/Recipes/07_Dashboard/) | Stat cards + Plotly line / bar charts + a top-categories card, driven by endpoints. |
-| 08 | [Custom Chat](./Mosaik.FrontEnd.Recipes/src/Recipes/08_CustomChat/) | Replace `PostMessage`, customise the chat header, examples and per-message actions. |
-| 09 | [Sidebar](./Mosaik.FrontEnd.Recipes/src/Recipes/09_Sidebar/) | Add custom buttons to the default sidebar and react to the active route. |
-| 10 | [User Preferences](./Mosaik.FrontEnd.Recipes/src/Recipes/10_UserPreferences/) | Custom preferences page surfaced under the `UserPreferences` sidebar mode. |
+| 01 | [Hello World](./FrontEnd.Recipes/src/Recipes/01_HelloWorld/) | The minimal Curiosity page — routing, `HubStack`, `HubTitle`, basic Tesserae components. |
+| 02 | [SearchArea](./FrontEnd.Recipes/src/Recipes/02_SearchArea/) | Wiring the workspace search box, facets, and custom search-result renderers. |
+| 03 | [Pivot](./FrontEnd.Recipes/src/Recipes/03_Pivot/) | Tabbed pages — cached vs lazy, justified, centered, overflow. |
+| 04 | [SegmentedPivot](./FrontEnd.Recipes/src/Recipes/04_SegmentedPivot/) | Compact segmented-control toggles for filters and views. |
+| 05 | [INodeRenderer](./FrontEnd.Recipes/src/Recipes/05_NodeRenderer/) | Custom node schema + custom cards / previews / detail pages, with admin-side schema bootstrap. |
+| 06 | [Neighbors & Graph](./FrontEnd.Recipes/src/Recipes/06_NeighborsGraph/) | Traversal via `Mosaik.API.Query`, the `Neighbors` list component, and the interactive `GraphExplorerView`. |
+| 07 | [Dashboards](./FrontEnd.Recipes/src/Recipes/07_Dashboard/) | Stat cards + Plotly line / bar charts + a top-categories card, driven by endpoints. |
+| 08 | [Custom Chat](./FrontEnd.Recipes/src/Recipes/08_CustomChat/) | Replace `PostMessage`, customise the chat header, examples and per-message actions. |
+| 09 | [Sidebar](./FrontEnd.Recipes/src/Recipes/09_Sidebar/) | Add custom buttons to the default sidebar and react to the active route. |
+| 10 | [User Preferences](./FrontEnd.Recipes/src/Recipes/10_UserPreferences/) | Custom preferences page surfaced under the `UserPreferences` sidebar mode. |
 
 The home view (`settings.HomeView = state => new RecipesHomeView(state);`) is replaced once for the whole project and shows the catalog as a card grid — the same `RecipeCatalog` table drives the sidebar entries and the routes.
 
@@ -90,7 +90,7 @@ The home view (`settings.HomeView = state => new RecipesHomeView(state);`) is re
 From the repo root:
 
 ```bash
-cd Mosaik.FrontEnd.Recipes
+cd FrontEnd.Recipes
 dotnet build
 
 # Serve the compiled bundle against a workspace
