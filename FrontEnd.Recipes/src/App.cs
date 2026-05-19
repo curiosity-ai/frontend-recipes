@@ -17,7 +17,7 @@ namespace FrontEnd.Recipes
             // still work when running this front-end against a workspace.
             Mosaik.Admin.LazyLoad();
 
-            App.Name = "Mosaik Front-End Recipes";
+            App.Name = "Front-End Recipes";
 
             // Routes must be registered BEFORE App.Initialize is called, otherwise the router will
             // already be running and won't recognise our paths on the first hash change.

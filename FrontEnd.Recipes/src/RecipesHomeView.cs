@@ -19,7 +19,7 @@ namespace FrontEnd.Recipes
         public RecipesHomeView(Parameters state)
         {
             var intro = Card(VStack().WS().Children(
-                TextBlock("Mosaik Front-End Recipes").XLarge().SemiBold(),
+                TextBlock("Front-End Recipes").XLarge().SemiBold(),
                 TextBlock("A self-contained tour of the most useful building blocks for a custom Curiosity Workspace UI.").Secondary(),
                 TextBlock("Pick a recipe below — each one is a single folder with its own README and the smallest amount of code that demonstrates the feature.")
             ).PB(8)).WS();

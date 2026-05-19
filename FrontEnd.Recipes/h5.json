@@ -4,7 +4,7 @@
   "fileName": "app.js",
   "html": {
     "disabled": false,
-    "title": "Mosaik Front-End Recipes"
+    "title": "Front-End Recipes"
   },
   "resources": [],
   "cleanOutputFolderBeforeBuildPattern": "*.js|*.css",
