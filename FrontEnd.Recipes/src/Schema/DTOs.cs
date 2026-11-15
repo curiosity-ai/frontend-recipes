@@ -1,9 +1,9 @@
-using H5;
+using Transpose;
 
 namespace FrontEnd.Recipes.Schema
 {
     // DTOs that mirror the JSON shape the (mock) workspace endpoints in Endpoints.cs return.
-    // They use [ObjectLiteral] so H5 can serialize / deserialize them as plain JS objects when
+    // They use [ObjectLiteral] so Transpose can serialize / deserialize them as plain JS objects when
     // they cross the network boundary.
 
     [ObjectLiteral]
@@ -26,18 +26,5 @@ namespace FrontEnd.Recipes.Schema
     {
         public string Label { get; set; }
         public int    Count { get; set; }
-    }
-
-    [ObjectLiteral]
-    public class RecipeChatRequest
-    {
-        public string Message { get; set; }
-        public string Topic   { get; set; }
-    }
-
-    [ObjectLiteral]
-    public class RecipeChatReply
-    {
-        public string Reply { get; set; }
     }
 }

@@ -15,5 +15,5 @@ Tabbed navigation built from Tesserae's `Pivot()` component. Pivots organise con
 
 ## See also
 
-- [INodeRenderer recipe](../05_NodeRenderer/) — every node detail page uses a Pivot to organise its tabs.
+- [Node Renderer recipe](../05_NodeRenderer/) — a node's preview sheet and page organise their content in tabs too.
 - [Mosaik's PivotSample](https://github.com/curiosity-ai/tesserae/blob/main/Tesserae.Tests/src/Samples/Surfaces/PivotSample.cs) — the canonical reference in Tesserae's own test app.

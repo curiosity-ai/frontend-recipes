@@ -1,14 +1,14 @@
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
 namespace FrontEnd.Recipes.Recipes._05_NodeRenderer
 {
     /// <summary>
-    /// Landing page for the INodeRenderer recipe — explains the moving parts and gives a live
+    /// Landing page for the node renderer recipe — explains the moving parts and gives a live
     /// SearchArea pre-filtered to the <c>RecipeBook</c> node type so the renderer is visible.
     /// </summary>
     public sealed class NodeRendererView : IComponent
@@ -20,13 +20,14 @@ namespace FrontEnd.Recipes.Recipes._05_NodeRenderer
             var intro = Card(VStack().WS().Children(
                 TextBlock("How this recipe works").SemiBold().Large(),
                 Bullet("Schema lives in RecipeBookSchema.cs — strongly-typed constants for the node type and its fields."),
-                Bullet("NodeRendererSchema.EnsureSchemaAsync() (called from App.cs OnLoad) writes the schema to the workspace via Mosaik.API.Schemas.Create — admin only."),
-                Bullet("RecipeBookRenderer implements INodeRenderer; Mosaik auto-discovers it at startup and uses it for every RecipeBook node it finds.")
+                Bullet("The RecipeBook schema itself belongs to the workspace: a data connector or the workspace definitions create it, not the front end. The README shows both."),
+                Bullet("RecipeBookRenderer derives from NodeRendererBase; the workspace discovers it at startup and uses it for every RecipeBook node: the search row, the preview sheet and the full page."),
+                Bullet("It overrides only what differs: the row's text, the properties shown, and one extra tab.")
             ).P(16)).WS().MB(16);
 
             var demo = Card(VStack().WS().Children(
                 TextBlock("Live preview").SemiBold().Large(),
-                TextBlock("Anything indexed as a RecipeBook node will be rendered with our custom card / preview / view.").Secondary(),
+                TextBlock("Every RecipeBook node in the workspace is drawn by RecipeBookRenderer: open one to see its preview sheet.").Secondary(),
                 SearchArea()
                     .OnSearch(s => s.SetBeforeTypesFacet(RecipeN.RecipeBook.Type))
                     .WithFacets()
@@ -34,12 +35,12 @@ namespace FrontEnd.Recipes.Recipes._05_NodeRenderer
                     .H(500)
             ).P(16)).WS();
 
-            _container = HubStack(HubTitle("INodeRenderer", "#/recipe/node-renderer"), DefaultRoutes.Home)
+            _container = Hub("Node Renderer", "#/recipe/node-renderer")
                             .Section(VStack().WS().Children(intro, demo).P(16), grow: true);
         }
 
         private static IComponent Bullet(string text) =>
-            HStack().AlignItemsStart().Children(Icon(UIcons.Check).PR(8).PT(4), TextBlock(text).BreakSpaces()).PB(4);
+            HStack().AlignItems(ItemAlign.Start).Children(Icon(UIcons.Check).PR(8).PT(4), TextBlock(text).BreakSpaces()).PB(4);
 
         public HTMLElement Render() => _container.Render();
     }

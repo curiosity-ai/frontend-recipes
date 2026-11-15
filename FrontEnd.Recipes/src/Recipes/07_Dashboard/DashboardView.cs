@@ -3,9 +3,8 @@ using FrontEnd.Recipes.API;
 using FrontEnd.Recipes.Schema;
 using Mosaik;
 using Mosaik.Components;
-using PlotlyH5;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -14,7 +13,7 @@ namespace FrontEnd.Recipes.Recipes._07_Dashboard
     /// <summary>
     /// A small dashboard built from three pieces every Curiosity dashboard ends up using:
     ///   1. Metric "stat" cards across the top.
-    ///   2. Plotly traces for time-series.
+    ///   2. Tesserae line and bar charts for the time-series.
     ///   3. A leaderboard / facet card on the side.
     ///
     /// All the data is pulled from <c>RecipeEndpoints</c>, which currently returns hard-coded
@@ -44,7 +43,7 @@ namespace FrontEnd.Recipes.Recipes._07_Dashboard
                 ).P(16);
             });
 
-            _container = HubStack(HubTitle("Dashboard", "#/recipe/dashboard"), DefaultRoutes.Home)
+            _container = Hub("Dashboard", "#/recipe/dashboard")
                             .Section(body.S(), grow: true);
         }
 
@@ -83,39 +82,26 @@ namespace FrontEnd.Recipes.Recipes._07_Dashboard
 
         private static IComponent LineChart(string[] x, double[] series1, double[] series2)
         {
-            return Plotly(
-                Plot.traces(
-                    Traces.scatter(Scatter.x(x), Scatter.y(series1), Scatter.name("Opened"),   Scatter.mode(Scatter.Mode.lines(), Scatter.Mode.markers())),
-                    Traces.scatter(Scatter.x(x), Scatter.y(series2), Scatter.name("Resolved"), Scatter.mode(Scatter.Mode.lines(), Scatter.Mode.markers()))
-                ),
-                Plot.layout(
-                    Layout.autosize(true),
-                    Layout.height(220),
-                    Layout.margin(Margin.t(10), Margin.b(30), Margin.l(40), Margin.r(10)),
-                    Layout.showlegend(true),
-                    PlotlyConfig.Background(),
-                    PlotlyConfig.Font(),
-                    PlotlyConfig.PaperBackground()),
-                PlotlyConfig.Default2D()
-            ).WS();
+            return Tesserae.UI.LineChart()
+               .XAxis(x)
+               .Series("Opened",   series1)
+               .Series("Resolved", series2)
+               .Points()
+               .Tooltips()
+               .Legend()
+               .H(220)
+               .WS();
         }
 
         private static IComponent BarChart(string[] x, double[] y)
         {
-            return Plotly(
-                Plot.traces(
-                    Traces.bar(Bar.x(x), Bar.y(y), Bar.Orientation.v())
-                ),
-                Plot.layout(
-                    Layout.autosize(true),
-                    Layout.height(220),
-                    Layout.margin(Margin.t(10), Margin.b(30), Margin.l(40), Margin.r(10)),
-                    Layout.showlegend(false),
-                    PlotlyConfig.Background(),
-                    PlotlyConfig.Font(),
-                    PlotlyConfig.PaperBackground()),
-                PlotlyConfig.Default2D()
-            ).WS();
+            return Tesserae.UI.BarChart()
+               .XAxis(x)
+               .Data(y)
+               .Rounded()
+               .Tooltips()
+               .H(220)
+               .WS();
         }
 
         private static IComponent CategoriesCard(TopCategoriesResponse categories)

@@ -32,7 +32,7 @@ namespace FrontEnd.Recipes
             {
                 Id          = "hello-world",
                 Title       = "Hello World",
-                Summary     = "Components, HubStack, HubTitle and routing — the bare minimum to render a page.",
+                Summary     = "Components, Hub and routing — the bare minimum to render a page.",
                 Route       = "#/recipe/hello-world",
                 Icon        = UIcons.HandWave,
                 ViewFactory = state => new HelloWorldView(state)
@@ -67,8 +67,8 @@ namespace FrontEnd.Recipes
             new RecipeInfo
             {
                 Id          = "node-renderer",
-                Title       = "INodeRenderer",
-                Summary     = "Define a custom node schema and render it in cards, previews and full pages.",
+                Title       = "Node Renderer",
+                Summary     = "Draw a node type your way in search rows, preview sheets and full pages.",
                 Route       = "#/recipe/node-renderer",
                 Icon        = UIcons.Box,
                 ViewFactory = state => new NodeRendererView(state)
@@ -86,7 +86,7 @@ namespace FrontEnd.Recipes
             {
                 Id          = "dashboard",
                 Title       = "Dashboards",
-                Summary     = "Build a dashboard from cards, Plotly charts and endpoint-backed metrics.",
+                Summary     = "Build a dashboard from metric cards, Tesserae charts and endpoint-backed numbers.",
                 Route       = "#/recipe/dashboard",
                 Icon        = UIcons.Dashboard,
                 ViewFactory = state => new DashboardView(state)
@@ -106,7 +106,7 @@ namespace FrontEnd.Recipes
                 Title       = "Sidebar",
                 Summary     = "Inject custom buttons into the default sidebar and react to the current route.",
                 Route       = "#/recipe/sidebar",
-                Icon        = UIcons.Menu,
+                Icon        = UIcons.MenuBurger,
                 ViewFactory = state => new SidebarView(state)
             },
             new RecipeInfo

@@ -1,7 +1,7 @@
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -19,16 +19,16 @@ namespace FrontEnd.Recipes.Recipes._09_Sidebar
         {
             var explanation = Card(VStack().WS().Children(
                 TextBlock("How custom sidebar buttons get there").SemiBold().Large(),
-                TextBlock(@"In App.cs we subscribe to App.Sidebar.OnSidebarRebuild_BeforeFooter and add a SidebarButton for every recipe in the catalog when the sidebar is in its default mode. The same callback fires every time the sidebar rebuilds, so the buttons survive workspace switches, theme changes and similar events.
+                TextBlock(@"In App.cs we subscribe to AppSidebar.OnSidebarRebuild_BeforeFooter and add a SidebarButton for every recipe in the catalog when the sidebar is in its default mode. The same callback fires every time the sidebar rebuilds, so the buttons survive workspace switches, theme changes and similar events.
 
 The tracker.Add(...) lines bind the IsSelected state of each button to the current URL hash — that is what makes the active button highlight as the user navigates.").BreakSpaces().Secondary()
             ).P(16)).WS().MB(16);
 
-            const string code = @"App.Sidebar.OnSidebarRebuild_BeforeFooter += (sidebar, mode, tracker) =>
+            const string code = @"AppSidebar.OnSidebarRebuild_BeforeFooter += (sidebar, mode, tracker) =>
 {
     switch (mode)
     {
-        case App.Sidebar.Mode.Default:
+        case AppSidebar.Mode.Default:
             foreach (var recipe in RecipeCatalog.All)
             {
                 var captured = recipe;
@@ -47,7 +47,7 @@ The tracker.Add(...) lines bind the IsSelected state of each button to the curre
                 TextBlock(code).BreakSpaces().Class("recipe-code")
             ).P(16)).WS();
 
-            _container = HubStack(HubTitle("Sidebar", "#/recipe/sidebar"), DefaultRoutes.Home)
+            _container = Hub("Sidebar", "#/recipe/sidebar")
                             .Section(VStack().WS().Children(explanation, snippet).P(16), grow: true);
         }
 

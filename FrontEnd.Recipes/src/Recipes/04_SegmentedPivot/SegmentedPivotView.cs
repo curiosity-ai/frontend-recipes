@@ -1,7 +1,7 @@
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -47,7 +47,7 @@ namespace FrontEnd.Recipes.Recipes._04_SegmentedPivot
 
             var body = VStack().WS().Children(basicExample, rangeExample, compactExample).P(16);
 
-            _container = HubStack(HubTitle("SegmentedPivot", "#/recipe/segmented-pivot"), DefaultRoutes.Home)
+            _container = Hub("SegmentedPivot", "#/recipe/segmented-pivot")
                             .Section(body, grow: true);
         }
 

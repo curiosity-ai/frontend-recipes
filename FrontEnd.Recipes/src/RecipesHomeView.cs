@@ -1,7 +1,7 @@
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -31,7 +31,7 @@ namespace FrontEnd.Recipes
                 grid.Add(BuildRecipeCard(recipe));
             }
 
-            _container = HubStack(HubTitle("Recipes", DefaultRoutes.Home), DefaultRoutes.Home)
+            _container = Hub("Recipes", DefaultRoutes.Home)
                             .Section(VStack().WS().Children(intro, grid).P(16), grow: true);
         }
 

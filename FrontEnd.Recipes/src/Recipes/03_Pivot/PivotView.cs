@@ -3,7 +3,7 @@ using System.Linq;
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -47,7 +47,7 @@ namespace FrontEnd.Recipes.Recipes._03_Pivot
                     ManyTabs())
             ).P(16);
 
-            _container = HubStack(HubTitle("Pivot", "#/recipe/pivot"), DefaultRoutes.Home)
+            _container = Hub("Pivot", "#/recipe/pivot")
                             .Section(body, grow: true);
         }
 

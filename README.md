@@ -1,6 +1,6 @@
 # Front-End Recipes
 
-A library of self-contained, runnable examples for building **custom front-ends** on top of a [Curiosity](https://curiosity.ai) workspace using the Mosaik front-end framework, the Tesserae UI library, and the `h5` C# → JavaScript compiler.
+A library of self-contained, runnable examples for building **custom front-ends** on top of a [Curiosity](https://curiosity.ai) workspace using the Curiosity front-end packages (`Curiosity.FrontEnd.*`), the Tesserae UI library, and the Transpose C# → JavaScript compiler.
 
 Where the [Connector Recipes](https://github.com/curiosity-ai/connector-recipes) cover ingesting data **into** a Curiosity workspace, these recipes cover putting a custom UI **on top of one**.
 
@@ -26,8 +26,8 @@ All ten recipes live inside a single front-end project — [`FrontEnd.Recipes`](
 ```
 FrontEnd.Recipes/
 ├── FrontEnd.Recipes.csproj
-├── h5.json
-├── h5.Release.json
+├── tps.json
+├── tps.Release.json
 └── src/
     ├── App.cs                    ← main entry: routes + sidebar + HomeView replacement
     ├── Recipes.cs                ← catalog used by App.cs + the landing page
@@ -55,14 +55,14 @@ Each recipe folder is **self-contained**: a `README.md` explaining the idea and 
 
 | # | Recipe | What it covers |
 |---|---|---|
-| 01 | [Hello World](./FrontEnd.Recipes/src/Recipes/01_HelloWorld/) | The minimal Curiosity page — routing, `HubStack`, `HubTitle`, basic Tesserae components. |
+| 01 | [Hello World](./FrontEnd.Recipes/src/Recipes/01_HelloWorld/) | The minimal Curiosity page — routing, a Tesserae `Hub`, basic Tesserae components. |
 | 02 | [SearchArea](./FrontEnd.Recipes/src/Recipes/02_SearchArea/) | Wiring the workspace search box, facets, and custom search-result renderers. |
 | 03 | [Pivot](./FrontEnd.Recipes/src/Recipes/03_Pivot/) | Tabbed pages — cached vs lazy, justified, centered, overflow. |
 | 04 | [SegmentedPivot](./FrontEnd.Recipes/src/Recipes/04_SegmentedPivot/) | Compact segmented-control toggles for filters and views. |
-| 05 | [INodeRenderer](./FrontEnd.Recipes/src/Recipes/05_NodeRenderer/) | Custom node schema + custom cards / previews / detail pages, with admin-side schema bootstrap. |
+| 05 | [Node Renderer](./FrontEnd.Recipes/src/Recipes/05_NodeRenderer/) | A `NodeRendererBase` for a custom node type: the search row, the preview sheet's properties and an extra tab. |
 | 06 | [Neighbors & Graph](./FrontEnd.Recipes/src/Recipes/06_NeighborsGraph/) | Traversal via `Mosaik.API.Query`, the `Neighbors` list component, and the interactive `GraphExplorerView`. |
-| 07 | [Dashboards](./FrontEnd.Recipes/src/Recipes/07_Dashboard/) | Stat cards + Plotly line / bar charts + a top-categories card, driven by endpoints. |
-| 08 | [Custom Chat](./FrontEnd.Recipes/src/Recipes/08_CustomChat/) | Replace `PostMessage`, customise the chat header, examples and per-message actions. |
+| 07 | [Dashboards](./FrontEnd.Recipes/src/Recipes/07_Dashboard/) | Stat cards + Tesserae line / bar charts + a top-categories card, driven by endpoints. |
+| 08 | [Custom Chat](./FrontEnd.Recipes/src/Recipes/08_CustomChat/) | A `ChatView` with its own `ChatViewConfiguration`: header, welcome prompts, per-message actions, and context passed with every turn. |
 | 09 | [Sidebar](./FrontEnd.Recipes/src/Recipes/09_Sidebar/) | Add custom buttons to the default sidebar and react to the active route. |
 | 10 | [User Preferences](./FrontEnd.Recipes/src/Recipes/10_UserPreferences/) | Custom preferences page surfaced under the `UserPreferences` sidebar mode. |
 
@@ -70,11 +70,11 @@ The home view (`settings.HomeView = state => new RecipesHomeView(state);`) is re
 
 ## Prerequisites
 
-- **.NET SDK** that matches the H5 toolchain bundled in the csproj.
-- The **h5 compiler** as a global dotnet tool:
+- A **.NET SDK** (10 or later).
+- The **Transpose compiler** as a global dotnet tool (the binary is `tps`):
 
   ```bash
-  dotnet tool update --global h5-compiler
+  dotnet tool update --global Transpose.Compiler
   ```
 
 - The **Curiosity CLI** if you want to push the front-end to a workspace from the command line:
@@ -95,9 +95,9 @@ dotnet build
 
 # Serve the compiled bundle against a workspace
 curiosity-cli serve \
-    -s    http://localhost:8080 \
-    -p    bin/Debug/netstandard2.0/h5 \
-    -port 5000
+    -s     http://localhost:8080 \
+    -p     bin/Debug/netstandard2.0/tps \
+    --port 5000
 ```
 
 Add the serving URL to your workspace's CORS allow-list:
@@ -110,13 +110,13 @@ Then open `http://localhost:5000` in a browser. The first thing you should see i
 
 ## Deploying to a workspace
 
-Zip the `h5` output folder and upload it via **Manage → Interface → Upload Front End**, or push it directly with the CLI:
+Zip the `tps` output folder and upload it via **Manage → Interface → Upload Front End**, or push it directly with the CLI:
 
 ```bash
 curiosity-cli upload-front-end \
     -s http://localhost:8080/ \
     -t $CURIOSITY_INTERFACE_TOKEN \
-    -p bin/Release/netstandard2.0/h5/
+    -p bin/Release/netstandard2.0/tps/
 ```
 
 ## Code shape
@@ -130,7 +130,7 @@ public sealed class XyzView : IComponent
 
     public XyzView(Parameters state)
     {
-        _container = HubStack(HubTitle("Title", "#/recipe/xyz"), DefaultRoutes.Home)
+        _container = Hub("Title", "#/recipe/xyz")
                         .Section(BuildBody(state), grow: true);
     }
 
@@ -155,24 +155,11 @@ public static async Task<DashboardSeriesResponse> GetDashboardSeriesAsync()
 }
 ```
 
-DTOs returned by those endpoints live in `src/Schema/DTOs.cs` and use `[ObjectLiteral]` so they round-trip cleanly through H5.
+DTOs returned by those endpoints live in `src/Schema/DTOs.cs` and use `[ObjectLiteral]` so they round-trip as plain JavaScript objects.
 
-### Creating a node schema from the front-end
+### The node schema the renderer recipe draws
 
-The INodeRenderer recipe needs a schema in the workspace to render against. The HTTP call that creates a schema used to live inline inside `Mosaik.FrontEnd.Admin/.../SchemaEditor.cs` (`await REQ.New("schema").WithBody(schema).PutAsync();`). It now lives in `Mosaik.FrontEnd.API/API.Schemas.cs`:
-
-```csharp
-public static async Task Create(SchemaDefinition schema)
-    => await REQ.New("schema").WithBody(schema).PutAsync();
-```
-
-so any front-end can register a schema with a single call:
-
-```csharp
-await Mosaik.API.Schemas.Create(new SchemaDefinition(name, type, key, fields));
-```
-
-The INodeRenderer recipe gates this behind `CurrentUser.IsAdmin` — non-admins still see existing nodes rendered, the schema just isn't auto-provisioned for them.
+The Node Renderer recipe draws `RecipeBook` nodes, so the workspace needs that node type. A front end does not create schemas: they belong to the workspace, created by the data connector that writes the nodes, or by the workspace definitions (`config/schemas/nodes/RecipeBook.cs`). The recipe's README has a connector snippet that creates the schema and a few nodes.
 
 ## Reusing a recipe
 

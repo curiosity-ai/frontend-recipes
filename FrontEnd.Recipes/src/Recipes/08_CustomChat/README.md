@@ -1,54 +1,63 @@
 # 08 — Custom Chat
 
-A drop-in replacement for the workspace's default chat experience that:
+A chat page of your own, built from the workspace's `ChatView` and a `ChatViewConfiguration`:
 
-- Calls a **custom backend endpoint** for `PostMessage`.
-- Renders a **custom header** with a topic selector beside the assistant-template dropdown.
-- Shows **custom empty-state examples** that pre-fill the input box on click.
-- Adds **per-message commands** (thumbs up / thumbs down) for assistant replies.
+- a title, a welcome line and fixed **example prompts**;
+- a **custom header** with a topic selector beside the assistant picker;
+- a **`PostMessage`** hook that tells the model which topic the user picked, on every turn;
+- **per-message commands** (thumbs up / thumbs down) on the assistant's replies.
+
+The same view replaces the product's assistant page when it is set as `settings.AssistantView` in `App.cs`.
 
 ## Code shape
 
 ```csharp
-var endpoints = new CustomChatView
+var configuration = new ChatViewConfiguration
 {
-    Title       = "Recipe Chat",
-    PostMessage = PostMessageAsync   // ← the only required override for a basic custom chat
+    Title          = "Recipe Chat",
+    WelcomeTitle   = "Ask about the support cases",
+    WelcomePrompts = new[] { "Summarise the most recent support cases for cameras.", ... },
+    Category       = "recipes",          // this page's history lists only the chats it started
+
+    CustomHeader    = BuildHeader,
+    PostMessage     = PostMessageAsync,
+    ReplaceMessage  = ReplaceMessageAsync,
+    MessageCommands = BuildMessageCommands,
 };
 
-_chatView = ChatView(endpoints, state)
-              .WithCustomHeader(BuildHeader)
-              .WithCustomExamples(BuildExamples)
-              .WithMessageCommands(BuildMessageCommands);
+_chatView = new ChatView(configuration, state);
 ```
 
-Other customization points on `CustomChatView` you'll reach for eventually:
+## Passing context with a turn
+
+What the model should know about the page — here, the topic — goes in `uiContext`, not in the message. The model reads it; the transcript shows only what the user typed.
+
+```csharp
+private Task<UID128> PostMessageAsync(ChatViewConfiguration.PostMessageRequest request)
+    => Mosaik.API.ChatAI.PostMessage(
+        chatUID:           request.ActiveChat.UID,
+        message:           request.Message,
+        useTools:          request.ActiveTools,
+        useAgents:         request.ActiveAgents,
+        useSkills:         request.ActiveSkills,
+        attachments:       request.AttachmentUIDs,
+        uiContext:         "[UI context]\nThe user scoped this conversation to the topic: " + _topic.Value + ".",
+        cancellationToken: request.CancellationToken);
+```
+
+`ReplaceMessage` is what **Edit** and **Regenerate** call. Give it the same context (and, if you pin tools, the same tools), or a regenerated answer runs without them.
+
+To answer from an endpoint of your own instead of the workspace's assistant, call it in `PostMessage` with `Mosaik.API.Endpoints.CallAsync<T>(...)` (with a small response class carrying the UID of the message it wrote) and return that UID.
+
+Other hooks on `ChatViewConfiguration` you'll reach for eventually:
 
 | Property | Use when |
 |---|---|
-| `NewChat`        | You want to create the chat row yourself (e.g. attach pre-set context). |
-| `ReplaceMessage` | You support message editing and need to re-trigger your own pipeline. |
-| `ListTools`      | The chat should show a curated set of tools instead of every one in the workspace. |
-| `ListChats`      | You're filtering the chat list (per-user, per-project, archived view). |
-
-## How the backend call works
-
-```csharp
-private async Task<UID128> PostMessageAsync(CustomChatView.PostMessageRequest request)
-{
-    // In a real chat you'd call:
-    //     return await Mosaik.API.Endpoints.CallAsync<UID128>(
-    //         "recipes/chat/post-message",
-    //         new RecipeChatRequest { Message = request.Message, Topic = _topic.Value });
-
-    var reply = await RecipeEndpoints.PostChatMessageAsync(new RecipeChatRequest { ... });
-
-    Toast().Information(reply.Reply);
-    return UID128.Empty;   // "I handled it myself"
-}
-```
-
-The recipe's `RecipeEndpoints.PostChatMessageAsync` lives in `src/API/Endpoints.cs` and currently returns a hard-coded reply. Once you have a real workspace endpoint, uncomment the `Mosaik.API.Endpoints.CallAsync<T>` line in there and delete the canned fallback.
+| `NewChat`        | You decide which assistant a new chat uses. |
+| `ListChats`      | You filter the chat history yourself. |
+| `ListToolsAndAgents` | The composer should offer a curated set of tools and agents. |
+| `DisableAssistantSelector`, `DisableTools` | The page answers as one assistant with one capability set. Pin them in `NewChat`, `PostMessage` and `ReplaceMessage`. |
+| `CustomExamples` | The welcome area needs more than a list of prompts. |
 
 ## Key file
 
@@ -56,6 +65,5 @@ The recipe's `RecipeEndpoints.PostChatMessageAsync` lives in `src/API/Endpoints.
 
 ## See also
 
-- [`TechnicalSupport.FrontEnd/src/SupportChat.cs`](https://github.com/curiosity-ai/technical-support/blob/main/custom-front-end/src/SupportChat.cs) — fuller example with chat-scoped context state attached to `ChatMetadata`.
-- The chat reference in `INSTRUCTIONS.md`: [`custom-front-end/INSTRUCTIONS.md#custom-chat-interface`](https://github.com/curiosity-ai/technical-support/blob/main/custom-front-end/INSTRUCTIONS.md#custom-chat-interface).
-- `Mosaik.FrontEnd/src/Desktop/ChatAIView/CustomChatView.cs` — the full surface of `CustomChatView` and its request DTOs.
+- [`ChatViewConfiguration.cs`](https://github.com/curiosity-ai/mosaik/blob/master/FrontEnd/Mosaik.FrontEnd/src/Desktop/ChatView/ChatViewConfiguration.cs) — every option and hook.
+- [`TechnicalSupport.FrontEnd/src/SupportChat.cs`](https://github.com/curiosity-ai/technical-support/blob/main/custom-front-end/src/SupportChat.cs) — a fuller example.

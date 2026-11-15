@@ -56,26 +56,5 @@ namespace FrontEnd.Recipes.API
                 }
             };
         }
-
-        /// <summary>
-        /// Returns a deterministic, pre-baked LLM-style answer for the custom chat recipe so it can
-        /// run without an actual model. The real endpoint would post a message and return the UID
-        /// of the new assistant message.
-        /// </summary>
-        public static async Task<RecipeChatReply> PostChatMessageAsync(RecipeChatRequest request)
-        {
-            // return await Mosaik.API.Endpoints.CallAsync<RecipeChatReply>("recipes/chat/post-message", request);
-
-            await Task.Delay(400);
-
-            var topic = string.IsNullOrEmpty(request.Topic) ? "any topic" : request.Topic;
-
-            return new RecipeChatReply
-            {
-                Reply = "This is a canned reply from the recipes endpoint. You asked about '" +
-                        request.Message + "' on topic '" + topic + "'. Wire this method to a real " +
-                        "Curiosity custom endpoint to get a live model response."
-            };
-        }
     }
 }
