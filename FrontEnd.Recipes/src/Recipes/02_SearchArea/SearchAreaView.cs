@@ -3,7 +3,7 @@ using Mosaik.Components;
 using Mosaik.Components.Nodes;
 using Mosaik.Schema;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -24,7 +24,7 @@ namespace FrontEnd.Recipes.Recipes._02_SearchArea
                 .Pivot("with-facets", PivotTitle("With facets"), () => SearchWithFacets().S(), cached: true)
                 .Pivot("custom",     PivotTitle("Custom card"), () => SearchWithCustomCard().S(), cached: true);
 
-            _container = HubStack(HubTitle("SearchArea", "#/recipe/search-area"), DefaultRoutes.Home)
+            _container = Hub("SearchArea", "#/recipe/search-area")
                             .Section(pivot, grow: true);
         }
 
@@ -40,21 +40,17 @@ namespace FrontEnd.Recipes.Recipes._02_SearchArea
                 .WithFacets();
         }
 
-        // Replace the default search-result card with a tight button row. The "card customizer"
-        // hook is also a good place to add per-row commands (open, copy URL, delete, etc.).
+        // Change the row every result is drawn as. CustomizeResult hands you the row the node's
+        // registered renderer produced: return it changed (as here) or return a different one.
+        // It is also the place for per-row commands (open, copy URL, delete, ...).
         private IComponent SearchWithCustomCard()
         {
             return SearchArea()
                 .SearchBox(b => b.AppendToSearchBox(Button("New").SetIcon(UIcons.Plus).OnClick(() => Toast().Information("Hook up a 'new item' modal here."))))
-                .Renderer(r => r.WithCustomizedRenderer((hit, rendered) =>
-                {
-                    var title = TextBlock(NodeRenderer.GetDisplayName(hit.Node)).SemiBold().Ellipsis().Grow();
-                    var type  = TextBlock(hit.Node.Type).Secondary().Tiny().PR(8);
-                    var row   = HStack().AlignItemsCenter().WS().Children(Icon(UIcons.Box).PR(8), title, type);
-
-                    var btn = Button().WS().ReplaceContent(row).OnClick(() => NodePreview.For(hit.Node));
-                    return new ReplacedResult(btn, rendered);
-                }));
+                .Renderer(r => r.CustomizeResult(result => result
+                    .SetIcon(UIcons.Box)
+                    .SetBadge(result.Result.Type)
+                    .OpenWith(() => NodePreview.For(result.Result))));
         }
 
         public HTMLElement Render() => _container.Render();

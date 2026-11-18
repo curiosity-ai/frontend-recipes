@@ -1,7 +1,7 @@
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -24,7 +24,7 @@ namespace FrontEnd.Recipes.Recipes._06_NeighborsGraph
                 .Pivot("neighbors", PivotTitle("Neighbors"),         () => NeighborsExample().S(), cached: true)
                 .Pivot("explorer",  PivotTitle("Graph explorer"),    () => GraphExample().S(),    cached: true);
 
-            _container = HubStack(HubTitle("Neighbors & Graph", "#/recipe/neighbors-graph"), DefaultRoutes.Home)
+            _container = Hub("Neighbors & Graph", "#/recipe/neighbors-graph")
                             .Section(pivot, grow: true);
         }
 
@@ -64,7 +64,7 @@ return Neighbors(
     new[] { ""_Document"" },
     showSearchBox: true,
     facetDisplay: FacetDisplayOptions.Visible).S();"),
-                TextBlock("This is exactly the pattern the INodeRenderer recipe uses to show the parts of a Device.").Secondary().PT(8)
+                TextBlock("The same pattern works inside a node renderer, to list a node's related nodes.").Secondary().PT(8)
             ).P(16));
         }
 
@@ -73,20 +73,19 @@ return Neighbors(
             return Card(VStack().WS().Children(
                 TextBlock("Graph Explorer view").SemiBold().Large(),
                 TextBlock("Render an interactive node-link diagram for a list of UIDs. Use it inside a node detail tab to show what the node is connected to.").Secondary(),
-                CodeBlock(@"// Inside an INodeRenderer's view:
+                CodeBlock(@"// Inside a node renderer's view: the node and everything it is connected to
+return GraphExplorerView.ViewFor(expandNeighbors: true, node.UID).S();
+
+// Or exactly the nodes a query returns
 return Defer(async () =>
 {
     var result = await Mosaik.API.Query
                     .StartAt(node.UID)
-                    .Out()
+                    .Out(""_Document"")
                     .TakeAll()
                     .GetUIDsAsync();
 
-    return GraphExplorerView
-              .ComponentFor(
-                  enableInteraction: true,
-                  uids: result.UIDs.Append(node.UID).ToArray())
-              .S();
+    return GraphExplorerView.ViewFor(result.UIDs.ToArray()).S();
 }).S();")
             ).P(16));
         }

@@ -1,6 +1,7 @@
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Mosaik;
 using Mosaik.Components;
+using Mosaik.Schema;
 using Tesserae;
 using static Mosaik.UI;
 using static Tesserae.UI;
@@ -9,53 +10,54 @@ using Node = Mosaik.Schema.Node;
 namespace FrontEnd.Recipes.Recipes._05_NodeRenderer
 {
     /// <summary>
-    /// INodeRenderer for the <c>RecipeBook</c> node type. The class is discovered automatically by
-    /// Mosaik's <c>AutoDiscoverViews</c> step — no manual registration needed, just implement the
-    /// interface and provide a parameter-less constructor.
+    /// Renderer for the <c>RecipeBook</c> node type. It is discovered automatically: a public class that
+    /// derives from <c>NodeRendererBase</c> and has a parameterless constructor is registered for the node
+    /// type its style names. The base class draws every surface (search row, preview sheet, full page);
+    /// override only the block you want to change.
     /// </summary>
-    public sealed class RecipeBookRenderer : INodeRenderer
+    public sealed class RecipeBookRenderer : NodeRendererBase
     {
-        public string NodeType    => RecipeN.RecipeBook.Type;
-        public string DisplayName => "Recipe Book";
-        public string LabelField  => RecipeN.RecipeBook.Title;
-        public string Color       => "#8e44ad";
-        public UIcons Icon        => UIcons.Book;
-
-        // Compact view: what shows up inside search results and dense lists. Keep it tight — a
-        // header with the icon, label and a one-line summary is usually enough.
-        public CardContent CompactView(Node node)
+        public RecipeBookRenderer() : base(new SchemaStyleInfo
         {
-            return CardContent(Header(this, node), TextBlock("by " + node.GetString(RecipeN.RecipeBook.Author)).Secondary());
+            Name        = RecipeN.RecipeBook.Type,
+            DisplayName = "Recipe Book",
+            LabelField  = RecipeN.RecipeBook.Title,
+            Color       = "#8e44ad",
+            Icon        = UIcons.Book.ToString(),
+        })
+        {
         }
 
-        // Preview: shown inside a modal when the user clicks "Quick look" on a card. Same shape as
-        // the full view, just usually less dense.
-        public Task<CardContent> PreviewAsync(Node node, Parameters state)
+        // The dense row: search results, node lists. Start from the standard row and say what differs.
+        public override OmniResult<Node> CompactView(Node node)
         {
-            return Task.FromResult(CardContent(Header(this, node), BuildBody(node)));
+            return NodeResult.For(this, node).SetText("by " + node.GetString(RecipeN.RecipeBook.Author));
         }
 
-        // Full view: the dedicated detail page when the user opens the node directly.
-        public async Task<IComponent> ViewAsync(Node node, Parameters state)
+        // Which properties the Overview tab shows, and in which order.
+        protected override IEnumerable<string> GetDisplayPropertyNames(Node node)
         {
-            return (await PreviewAsync(node, state)).Merge();
+            yield return RecipeN.RecipeBook.Title;
+            yield return RecipeN.RecipeBook.Author;
+            yield return RecipeN.RecipeBook.Year;
+            yield return RecipeN.RecipeBook.Genre;
         }
 
-        private static IComponent BuildBody(Node node)
+        // The tabs of the preview sheet and the full page: keep the standard ones and add one of our own.
+        protected override IEnumerable<NodeTab> BuildTabs(Node node, IReadOnlyList<RelationshipGroup> groups, NodeView nodeView)
         {
-            return Pivot().S()
-                .Pivot("overview", PivotTitle("Overview"), () => RenderOverview(node))
-                .Pivot("metadata", PivotTitle("Metadata"), () => RenderMetadata(node));
-        }
+            foreach (var tab in base.BuildTabs(node, groups, nodeView))
+            {
+                yield return tab;
+            }
 
-        private static IComponent RenderOverview(Node node)
-        {
-            return VStack().S().Children(
-                Label("Title").Inline().AutoWidth().SetContent(TextBlock(node.GetString(RecipeN.RecipeBook.Title)).SemiBold()),
-                Label("Author").Inline().AutoWidth().SetContent(TextBlock(node.GetString(RecipeN.RecipeBook.Author))),
-                Label("Year").Inline().AutoWidth().SetContent(TextBlock(node.GetInt(RecipeN.RecipeBook.Year).ToString())),
-                Label("Genre").Inline().AutoWidth().SetContent(TextBlock(node.GetString(RecipeN.RecipeBook.Genre)))
-            ).P(16);
+            yield return new NodeTab
+            {
+                Id         = "metadata",
+                Label      = "Metadata",
+                TabTitle   = () => TextBlock("Metadata"),
+                TabContent = () => RenderMetadata(nodeView.Node)
+            };
         }
 
         private static IComponent RenderMetadata(Node node)

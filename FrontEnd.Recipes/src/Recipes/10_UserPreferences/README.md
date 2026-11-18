@@ -4,10 +4,10 @@ How to add a **custom page under the user-preferences sidebar mode** and persist
 
 ## Two halves
 
-1. **In [`src/App.cs`](../../App.cs)**, we subscribe to `App.Sidebar.OnSidebarRebuild_BeforeFooter` and add a button when `mode == App.Sidebar.Mode.UserPreferences`:
+1. **In [`src/App.cs`](../../App.cs)**, we subscribe to `AppSidebar.OnSidebarRebuild_BeforeFooter` and add a button when `mode == AppSidebar.Mode.UserPreferences`:
 
     ```csharp
-    case App.Sidebar.Mode.UserPreferences:
+    case AppSidebar.Mode.UserPreferences:
     {
         var btn = new SidebarButton("recipe-prefs", UIcons.SlidersHSquare, "Recipe Preferences")
                      .OnClick(() => Router.Navigate(UserPreferencesRecipeView.PreferencesRoute));

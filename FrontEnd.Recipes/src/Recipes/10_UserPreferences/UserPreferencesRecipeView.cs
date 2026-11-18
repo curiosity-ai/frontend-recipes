@@ -2,7 +2,7 @@ using Mosaik;
 using Mosaik.Components;
 using Mosaik.Helpers;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
 
@@ -10,7 +10,7 @@ namespace FrontEnd.Recipes.Recipes._10_UserPreferences
 {
     /// <summary>
     /// Custom preferences page surfaced under the user-preferences sidebar mode. Combine this with
-    /// the <c>App.Sidebar.OnSidebarRebuild_BeforeFooter</c> hook in <c>App.cs</c> (which adds the
+    /// the <c>AppSidebar.OnSidebarRebuild_BeforeFooter</c> hook in <c>App.cs</c> (which adds the
     /// matching SidebarButton when the sidebar is in <c>Mode.UserPreferences</c>).
     ///
     /// The recipe persists settings to <c>LocalStorage</c> so they survive reloads. For settings
@@ -77,7 +77,7 @@ namespace FrontEnd.Recipes.Recipes._10_UserPreferences
                 ).P(16)).WS()
             ).P(16);
 
-            _container = HubStack(HubTitle("Recipe Preferences", PreferencesRoute), DefaultRoutes.Home)
+            _container = Hub("Recipe Preferences", PreferencesRoute)
                             .Section(body, grow: true);
         }
 

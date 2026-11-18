@@ -1,83 +1,98 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FrontEnd.Recipes.API;
-using FrontEnd.Recipes.Schema;
 using Mosaik;
 using Mosaik.Components;
 using Mosaik.Schema;
 using Tesserae;
-using static H5.Core.dom;
+using UID;
+using static Transpose.Core.dom;
 using static Mosaik.UI;
 using static Tesserae.UI;
-using UID;
 
 namespace FrontEnd.Recipes.Recipes._08_CustomChat
 {
     /// <summary>
-    /// A drop-in replacement for the workspace's default chat view. We override:
-    ///   - <see cref="CustomChatView.PostMessage"/> so the chat talks to our own backend endpoint;
-    ///   - the header, with a custom topic selector next to the assistant-template dropdown;
-    ///   - the empty-state examples;
-    ///   - per-message commands (thumbs up / down).
+    /// A chat of our own, built from the workspace's <c>ChatView</c> with a <c>ChatViewConfiguration</c>:
+    ///   - a title, a welcome line and fixed example prompts;
+    ///   - a topic picker next to the assistant selector in the header;
+    ///   - <c>PostMessage</c>, so every turn tells the model which topic the user picked;
+    ///   - per-message commands (thumbs up / down) on the assistant's replies.
     ///
-    /// The endpoint call in <see cref="PostMessageAsync"/> currently returns a canned reply via
-    /// <see cref="RecipeEndpoints.PostChatMessageAsync"/> — swap it for a real
-    /// <c>Mosaik.API.Endpoints.CallAsync&lt;UID128&gt;("your-endpoint", request)</c> once you have a
-    /// custom endpoint that drives an LLM.
+    /// The same class replaces the product's assistant page when it is set as
+    /// <c>settings.AssistantView</c> in <c>App.cs</c>; here it is one recipe page.
     /// </summary>
     public sealed class CustomChatRecipeView : IComponent
     {
-        private readonly ChatAIView _chatView;
+        private readonly IComponent                 _chatView;
         private readonly SettableObservable<string> _topic = new SettableObservable<string>("Any");
 
         public CustomChatRecipeView(Parameters state)
         {
-            var endpoints = new CustomChatView
+            var configuration = new ChatViewConfiguration
             {
-                Title       = "Recipe Chat",
-                PostMessage = PostMessageAsync
+                Title                  = "Recipe Chat",
+                WelcomeTitle           = "Ask about the support cases",
+                ChatBoxPlaceholderText = "Ask a question about a product or a case",
+                WelcomePrompts         = new[]
+                {
+                    "Summarise the most recent support cases for cameras.",
+                    "Which laptop models had the most opened cases this week?",
+                    "Show me my unresolved tickets sorted by age."
+                },
+
+                // Chats this page starts are stamped with the category, and its history lists only those.
+                Category = "recipes",
+
+                CustomHeader    = BuildHeader,
+                PostMessage     = PostMessageAsync,
+                ReplaceMessage  = ReplaceMessageAsync,
+                MessageCommands = BuildMessageCommands,
             };
 
-            _chatView = ChatView(endpoints, state)
-                          .WithCustomHeader(BuildHeader)
-                          .WithCustomExamples(BuildExamples)
-                          .WithMessageCommands(BuildMessageCommands);
+            _chatView = new ChatView(configuration, state);
         }
 
         // ------------------------------------------------------------------------------
-        // Endpoint integration
+        // Sending a turn
         // ------------------------------------------------------------------------------
 
-        private async Task<UID128> PostMessageAsync(CustomChatView.PostMessageRequest request)
-        {
-            // In a real chat you would either call the workspace's default chat endpoint OR your
-            // own custom endpoint that drives the LLM and writes both the user message and the
-            // assistant reply into the chat. The line below is what that real call looks like:
-            //
-            //     return await Mosaik.API.Endpoints.CallAsync<UID128>("recipes/chat/post-message",
-            //         new RecipeChatRequest { Message = request.Message, Topic = _topic.Value });
+        // The topic travels as uiContext: the model reads it, and the transcript shows only what the
+        // user typed. To answer from an endpoint of your own instead, call it here with
+        // Mosaik.API.Endpoints.CallAsync and return the UID of the message it wrote.
+        private Task<UID128> PostMessageAsync(ChatViewConfiguration.PostMessageRequest request)
+            => Mosaik.API.ChatAI.PostMessage(
+                chatUID:           request.ActiveChat.UID,
+                message:           request.Message,
+                useTools:          request.ActiveTools,
+                useAgents:         request.ActiveAgents,
+                useSkills:         request.ActiveSkills,
+                attachments:       request.AttachmentUIDs,
+                uiContext:         TopicContext(),
+                cancellationToken: request.CancellationToken);
 
-            var reply = await RecipeEndpoints.PostChatMessageAsync(new RecipeChatRequest
-            {
-                Message = request.Message,
-                Topic   = _topic.Value
-            });
+        // "Edit" and "Regenerate" go through ReplaceMessage: give it the same context, or a regenerated
+        // answer forgets the topic.
+        private Task<UID128> ReplaceMessageAsync(ChatViewConfiguration.ReplaceMessageRequest request)
+            => Mosaik.API.ChatAI.ReplaceMessage(
+                chatUID:           request.ActiveChat.UID,
+                messageUID:        request.MessageUID,
+                message:           request.Message,
+                useTools:          request.ActiveTools,
+                useAgents:         request.ActiveAgents,
+                useSkills:         request.ActiveSkills,
+                uiContext:         TopicContext(),
+                cancellationToken: request.CancellationToken);
 
-            Toast().Information(reply.Reply);
-
-            // Return UID128.Empty when you are not posting the message to the workspace at all —
-            // ChatAIView treats that as "you already handled this".
-            return UID128.Empty;
-        }
+        private string TopicContext()
+            => _topic.Value == "Any" ? null : "[UI context]\nThe user scoped this conversation to the topic: " + _topic.Value + ".";
 
         // ------------------------------------------------------------------------------
-        // Header + examples + per-message commands
+        // Header + per-message commands
         // ------------------------------------------------------------------------------
 
         private IComponent BuildHeader(SelectAIAssistantTemplateDropdown templateDropdown)
         {
-            // The default header surfaces the assistant-template picker; we keep it but add a
-            // small "topic" control next to it so the user can scope every chat to a topic.
+            // Keep the assistant picker and add a topic control beside it.
             var topicDropdown = Dropdown().Items(
                 ItemFor("Any"),
                 ItemFor("Smartphones"),
@@ -92,33 +107,11 @@ namespace FrontEnd.Recipes.Recipes._08_CustomChat
                 => DropdownItem(topic).SelectedIf(_topic.Value == topic).OnSelected(_ => _topic.Value = topic);
         }
 
-        private static bool BuildExamples(CurrentChat chat, Stack stack, TextArea area, ChatAISendStopButton sendButton, bool _)
-        {
-            stack.Add(TextBlock("Try one of these to get started:").Secondary());
-
-            foreach (var example in new[]
-                     {
-                         "Summarise the most recent support cases for cameras.",
-                         "Which laptop models had the most opened cases this week?",
-                         "Show me my unresolved tickets sorted by age."
-                     })
-            {
-                var captured = example;
-                stack.Add(Button(captured).WS().TextLeft().M(4).OnClick(() =>
-                {
-                    area.Text = captured;
-                    sendButton.TriggerSend(new MouseEvent(null));
-                }));
-            }
-
-            return true; // we rendered our own examples, don't fall through to the default ones
-        }
-
-        private static IEnumerable<MessageCommand> BuildMessageCommands(CurrentChat chat, ChatMessage message)
+        private static IEnumerable<MessageCommand> BuildMessageCommands(CurrentChat chat, Mosaik.Schema.ChatMessage message)
         {
             if (message.Author == FixedUIDs.AssistantAuthor)
             {
-                yield return new MessageCommand(UIcons.ThumbsUp,   "Helpful").OnClick(()    => Toast().Success("Thanks for the feedback."));
+                yield return new MessageCommand(UIcons.ThumbsUp,   "Helpful").OnClick(()     => Toast().Success("Thanks for the feedback."));
                 yield return new MessageCommand(UIcons.ThumbsDown, "Not helpful").OnClick(() => Toast().Information("Logged as negative feedback."));
             }
         }

@@ -4,7 +4,7 @@ using FrontEnd.Recipes.Recipes._10_UserPreferences;
 using Mosaik;
 using Mosaik.Components;
 using Tesserae;
-using static H5.Core.dom;
+using static Transpose.Core.dom;
 using static Tesserae.UI;
 
 namespace FrontEnd.Recipes
@@ -13,7 +13,7 @@ namespace FrontEnd.Recipes
     {
         private static void Main()
         {
-            // Lazy-load the admin assembly so admin-only screens (and INodeRenderer auto-discovery)
+            // Lazy-load the admin assembly so admin-only screens (and node renderer auto-discovery)
             // still work when running this front-end against a workspace.
             Mosaik.Admin.LazyLoad();
 
@@ -33,7 +33,7 @@ namespace FrontEnd.Recipes
             App.Initialize(Configure, OnLoad).FireAndForget();
         }
 
-        private static void Configure(App.DefaultSettings settings)
+        private static void Configure(AppSettings settings)
         {
             // Recipe — replace the default home view with the recipe catalog landing page.
             settings.HomeView = state => new RecipesHomeView(state);
@@ -41,11 +41,11 @@ namespace FrontEnd.Recipes
             // Recipes 09 and 10 — wire sidebar customizations for the default mode AND for the
             // user-preferences mode. We do everything in this single subscription so the order in
             // which recipes are added stays explicit and easy to read.
-            App.Sidebar.OnSidebarRebuild_BeforeFooter += (sidebar, mode, tracker) =>
+            AppSidebar.OnSidebarRebuild_BeforeFooter += (sidebar, mode, tracker) =>
             {
                 switch (mode)
                 {
-                    case App.Sidebar.Mode.Default:
+                    case AppSidebar.Mode.Default:
                         {
                             // Pin a button per recipe under the standard sidebar — see Recipes/09_Sidebar.
                             foreach (var recipe in RecipeCatalog.All)
@@ -61,7 +61,7 @@ namespace FrontEnd.Recipes
                             break;
                         }
 
-                    case App.Sidebar.Mode.UserPreferences:
+                    case AppSidebar.Mode.UserPreferences:
                         {
                             // Recipe 10 — surface a custom preferences page under the user-preferences sidebar mode.
                             var btn = new SidebarButton("recipe-prefs", UIcons.SlidersHSquare, "Recipe Preferences")
@@ -77,9 +77,6 @@ namespace FrontEnd.Recipes
 
         private static void OnLoad()
         {
-            // Recipe 05 — register the demo node schema so INodeRenderer auto-discovery has something
-            // to render against. Only admins can write the schema, so the call short-circuits otherwise.
-            NodeRendererSchema.EnsureSchemaAsync().FireAndForget();
         }
     }
 }
